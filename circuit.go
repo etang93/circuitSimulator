@@ -1,8 +1,13 @@
 package main
 
-import "fmt"
+import (
+    "bufio"
+    "fmt"
+    "log"
+    "os"
+)
 
-func andGate(inputC1, inputC2, c chan int) {
+func And(inputC1, inputC2, c chan int) {
 	input1 := <-inputC1
 	input2 := <-inputC2
 	retVal := 0
@@ -12,7 +17,7 @@ func andGate(inputC1, inputC2, c chan int) {
 	c <- retVal
 }
 
-func orGate(inputC1, inputC2, c chan int) {
+func Or(inputC1, inputC2, c chan int) {
 	input1 := <-inputC1
 	input2 := <-inputC2
 	retVal := 0 
@@ -22,7 +27,7 @@ func orGate(inputC1, inputC2, c chan int) {
 	c <- retVal
 }
 
-func notGate(inputC1, c chan int) {
+func Not(inputC1, c chan int) {
 	input1 := <-inputC1
 	retVal := 0
 	if(input1 == 0){
@@ -31,7 +36,7 @@ func notGate(inputC1, c chan int) {
 	c <- retVal
 }
 
-func nandGate(inputC1, inputC2, c chan int) {
+func Nand(inputC1, inputC2, c chan int) {
 	input1 := <-inputC1
 	input2 := <-inputC2
 	retVal := 0
@@ -41,7 +46,7 @@ func nandGate(inputC1, inputC2, c chan int) {
 	c <- retVal
 }
 
-func norGate(inputC1, inputC2, c chan int) {
+func Nor(inputC1, inputC2, c chan int) {
 	input1 := <-inputC1
 	input2 := <-inputC2
 	retVal := 0
@@ -51,7 +56,7 @@ func norGate(inputC1, inputC2, c chan int) {
 	c <- retVal
 }
 
-func xorGate(inputC1, inputC2, c chan int) {
+func Xor(inputC1, inputC2, c chan int) {
 	input1 := <-inputC1
 	input2 := <-inputC2
 	retVal := 0
@@ -67,6 +72,29 @@ func intersection(input, output1, output2 chan int) {
 	output2 <- retVal
 }
 
+func readFile(filename string) []string{
+
+	var commands []string
+	
+	file, err := os.Open(filename)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+    	commands = append(commands, scanner.Text())
+    }
+
+    if err := scanner.Err(); err != nil {
+        log.Fatal(err)
+    }
+
+    return commands
+}
+
+
 
 func main() {
 	var flipFlopState int
@@ -74,6 +102,10 @@ func main() {
 	var clockPulsesPerSec int
 	var clockPulsesTot int
 	var channels [8]chan int
+
+	filename := "C:/Go/workspace/src/circuit/bin/blah.txt"
+	commands := readFile(filename)
+	
 	for i := range channels {
 		channels[i] = make(chan int)
 	}
@@ -107,7 +139,7 @@ func main() {
 		testC2 <- 1
 		}()
 
-	go andGate(testC1, testC2, channels[0])
+	go And(testC1, testC2, channels[0])
 	valAnd := <-channels[0]
 
 	go func() {
@@ -115,14 +147,14 @@ func main() {
 		testC2 <- 1
 		}()
 
-	go orGate(testC1, testC2, channels[1])
+	go Or(testC1, testC2, channels[1])
 	valOr := <-channels[1]
 
 	go func() {
 		testC1 <- 1
 		}()
 
-	go notGate(testC1, channels[2])
+	go Not(testC1, channels[2])
 	valNot := <-channels[2]
 	
 	go func() {
@@ -130,7 +162,7 @@ func main() {
 		testC2 <- 1
 		}()
 
-	go nandGate(testC1, testC2, channels[3])
+	go Nand(testC1, testC2, channels[3])
 	valNand := <-channels[3]
 
 	go func() {
@@ -138,7 +170,7 @@ func main() {
 		testC2 <- 1
 		}()
 
-	go norGate(testC1, testC2, channels[4])
+	go Nor(testC1, testC2, channels[4])
 	valNor := <-channels[4]
 	
 	go func() {
@@ -146,7 +178,7 @@ func main() {
 		testC2 <- 0
 		}()
 
-	go xorGate(testC1, testC2, channels[5])
+	go Xor(testC1, testC2, channels[5])
 	valXor := <-channels[5]
 
 	go func() {
@@ -168,4 +200,8 @@ func main() {
 	fmt.Println("clockRequested: ", clockRequested)
 	fmt.Println("clockPulsesPerSec: ", clockPulsesPerSec)
 	fmt.Println("clockPulsesTot: ", clockPulsesTot)
+
+	for _, r := range commands {
+		fmt.Println(r)
+	}
 }

@@ -2,7 +2,9 @@ package main
 
 import "fmt"
 
-func andGate(input1, input2 int, c chan int) {
+func andGate(inputC1, inputC2, c chan int) {
+	input1 := <-inputC1
+	input2 := <-inputC2
 	retVal := 0
 	if(input1 == 1 && input2 == 1){
 		retVal = 1
@@ -10,7 +12,9 @@ func andGate(input1, input2 int, c chan int) {
 	c <- retVal
 }
 
-func orGate(input1, input2 int, c chan int) {
+func orGate(inputC1, inputC2, c chan int) {
+	input1 := <-inputC1
+	input2 := <-inputC2
 	retVal := 0 
 	if(input1 == 1 || input2 == 1){
 		retVal = 1
@@ -18,7 +22,8 @@ func orGate(input1, input2 int, c chan int) {
 	c <- retVal
 }
 
-func notGate(input1 int, c chan int) {
+func notGate(inputC1, c chan int) {
+	input1 := <-inputC1
 	retVal := 0
 	if(input1 == 0){
 		retVal = 1
@@ -26,7 +31,9 @@ func notGate(input1 int, c chan int) {
 	c <- retVal
 }
 
-func nandGate(input1, input2 int, c chan int) {
+func nandGate(inputC1, inputC2, c chan int) {
+	input1 := <-inputC1
+	input2 := <-inputC2
 	retVal := 0
 	if(input1 == input2){
 		retVal = 1
@@ -34,7 +41,9 @@ func nandGate(input1, input2 int, c chan int) {
 	c <- retVal
 }
 
-func norGate(input1, input2 int, c chan int) {
+func norGate(inputC1, inputC2, c chan int) {
+	input1 := <-inputC1
+	input2 := <-inputC2
 	retVal := 0
 	if(input1 == 0 && input2 == 0){
 		retVal = 1
@@ -42,7 +51,9 @@ func norGate(input1, input2 int, c chan int) {
 	c <- retVal
 }
 
-func xorGate(input1, input2 int, c chan int) {
+func xorGate(inputC1, inputC2, c chan int) {
+	input1 := <-inputC1
+	input2 := <-inputC2
 	retVal := 0
 	if(input1 != input2){
 		retVal = 1
@@ -50,12 +61,19 @@ func xorGate(input1, input2 int, c chan int) {
 	c <- retVal
 }
 
+func intersection(input, output1, output2 chan int) {
+	retVal := <- input
+	output1 <- retVal
+	output2 <- retVal
+}
+
+
 func main() {
 	var flipFlopState int
 	var clockRequested string
 	var clockPulsesPerSec int
 	var clockPulsesTot int
-	var channels [6]chan int
+	var channels [8]chan int
 	for i := range channels {
 		channels[i] = make(chan int)
 	}
@@ -81,25 +99,72 @@ func main() {
 		fmt.Scanf("%d\n", &clockPulsesTot)
 	}
 	
-	go andGate(1, 1, channels[0])
+	testC1 := make(chan int)
+	testC2 := make(chan int)
+
+	go func() {
+		testC1 <- 1
+		testC2 <- 1
+		}()
+
+	go andGate(testC1, testC2, channels[0])
 	valAnd := <-channels[0]
-	go orGate(0, 1, channels[1])
+
+	go func() {
+		testC1 <- 1
+		testC2 <- 1
+		}()
+
+	go orGate(testC1, testC2, channels[1])
 	valOr := <-channels[1]
-	go notGate(0, channels[2])
-	valNot := <- channels[2]
-	go nandGate(0, 0, channels[3])
-	valNand := <- channels[3]
-	go norGate(1, 1, channels[4])
-	valNor := <- channels[4]
-	go xorGate(0,1, channels[5])
-	valXor := <- channels[5]
-	fmt.Print("valAnd: ", valAnd, "\n")
-	fmt.Print("valOr: ", valOr, "\n")
-	fmt.Print("valNot: ", valNot, "\n")	
-	fmt.Print("valNand: ", valNand, "\n")
-	fmt.Print("valNor: ", valNor, "\n")
-	fmt.Print("valXor: ", valXor, "\n")
-	fmt.Print("flipFlopState: ", flipFlopState, "\n")
+
+	go func() {
+		testC1 <- 1
+		}()
+
+	go notGate(testC1, channels[2])
+	valNot := <-channels[2]
+	
+	go func() {
+		testC1 <- 1
+		testC2 <- 1
+		}()
+
+	go nandGate(testC1, testC2, channels[3])
+	valNand := <-channels[3]
+
+	go func() {
+		testC1 <- 1
+		testC2 <- 1
+		}()
+
+	go norGate(testC1, testC2, channels[4])
+	valNor := <-channels[4]
+	
+	go func() {
+		testC1 <- 1
+		testC2 <- 0
+		}()
+
+	go xorGate(testC1, testC2, channels[5])
+	valXor := <-channels[5]
+
+	go func() {
+		channels[5] <- 1
+		}()
+
+	go intersection(channels[5], channels[6], channels[7])
+	intersect1, intersect2 := <-channels[6], <-channels[7]
+
+	fmt.Println("valAnd: ", valAnd)
+	fmt.Println("valOr: ", valOr)
+	fmt.Println("valNot: ", valNot)	
+	fmt.Println("valNand: ", valNand)
+	fmt.Println("valNor: ", valNor)
+	fmt.Println("valXor: ", valXor)
+	fmt.Println("intersect1: ", intersect1, "intersect2: ", intersect2)
+
+	fmt.Println("flipFlopState: ", flipFlopState)
 	fmt.Println("clockRequested: ", clockRequested)
 	fmt.Println("clockPulsesPerSec: ", clockPulsesPerSec)
 	fmt.Println("clockPulsesTot: ", clockPulsesTot)

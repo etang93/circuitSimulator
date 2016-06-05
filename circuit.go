@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "os"
+    s "strings"
 )
 
 func And(inputC1, inputC2, c chan int) {
@@ -94,7 +95,16 @@ func readFile(filename string) []string{
     return commands
 }
 
-
+func createChannels(commands []string) []chan int{
+	var channels []chan int 
+	for _, lines := range commands {
+		channels = append(channels,make(chan int))
+		if s.Contains(lines, "INTERSECT") {
+			channels = append(channels, make(chan int))
+		}
+	}
+	return channels
+}
 
 func main() {
 	var flipFlopState int
@@ -204,4 +214,15 @@ func main() {
 	for _, r := range commands {
 		fmt.Println(r)
 	}
+
+	ch := createChannels(commands)
+
+	var count int
+	for _, c := range ch {
+		count++
+		go func() {
+			c <- 1
+			}()
+	}
+	fmt.Println("counter: " , count)
 }

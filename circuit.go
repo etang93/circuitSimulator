@@ -81,6 +81,10 @@ func intersection(input, output1, output2 chan int) {
 	fmt.Println("Finished in intersection")
 }
 
+func Output(output1 chan int, outputNum int){
+	fmt.Println("The output for pipe ", outputNum, " is : ", <-output1)
+}
+
 func readFile(filename string) []string{
 
 	var commands []string
@@ -194,6 +198,10 @@ func pipeline(commands []string, channels []chan int){
 						if err != nil {
 							println("err: INTERSECTION", err, "split[3]: ", split[3])}
 						go intersection(channels[val1], channels[val2], channels[val3])
+			case "OUTPUT": val1, err:= strconv.Atoi(split[1])
+						if err != nil {
+							println("err: OUTPUT ", err, "split[1]: ", split[1])}
+						go Output(channels[val1], val1)
 			default: fmt.Println("Error in Pipeline")
 		}
 		
@@ -259,7 +267,7 @@ func main() {
 	}
 	
 	go pipeline(commands, ch)
-	fmt.Println("len: ", len(ch))
-	fmt.Println("ch[15]: ", <-ch[57])
+	
+	fmt.Println("ch[15]: ", <-ch[15])
 
 }

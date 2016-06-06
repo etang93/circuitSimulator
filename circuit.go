@@ -212,17 +212,20 @@ func main() {
 	var external int
 	var channelNum int
 	var numExternals int
-
-	filename := "C:/Go/workspace/src/circuit/bin/blah.txt"
-	commands := readFile(filename)
-	ch := createChannels(commands)
+	var filename string
+	//filename := "C:/Go/workspace/src/circuit/bin/blah.txt"
 	
+	fmt.Println("What is the filename with the circuit description?")
+	fmt.Scanf("%s\n", &filename)
+
 	fmt.Println("Enter in initial state value for flip-flop")
 	fmt.Scanf("%d\n", &flipFlopState )
 	
 	fmt.Println("How many external values do you have?")
 	fmt.Scanf("%d\n", &numExternals)
 
+	commands := readFile(filename)
+	ch := createChannels(commands)
 	ch = addChannels(ch, numExternals)
 
 	for i := 0; i < numExternals; i++ {
@@ -256,7 +259,7 @@ func main() {
 	}
 	
 	go pipeline(commands, ch)
-
-	fmt.Println("ch[15]: ", <-ch[15])
+	fmt.Println("len: ", len(ch))
+	fmt.Println("ch[15]: ", <-ch[57])
 
 }
